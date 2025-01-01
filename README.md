@@ -37,7 +37,7 @@ python estimate_cell_cycle_transitions.py --input_adata adata_mESC_DeepCycle.h5a
   
 3. 使用`scvelo.pp.moments()`估算'Ms'和'Mu'
   ```python
-     scv.pp.moments(adata)
+  scv.pp.moments(adata)
   ```
 
 4. 保存预处理后的数据
@@ -56,7 +56,8 @@ python estimate_cell_cycle_transitions.py --input_adata adata_mESC_DeepCycle.h5a
   python DeepCycle.py --input_adata "pancreas_pp.h5ad" --gene_list go_annotation/GO_cell_cycle_annotation_mouse.txt --base_gene Actb --expression_threshold 0.5 --gpu --hotelling --output_adata pancreas_adata_mESC_DeepCycle.h5ad
   ```
 
-此时输出文件`pancreas_adata_mESC_DeepCycle.h5ad`中包含obs['']
+  此时输出文件`pancreas_adata_mESC_DeepCycle.h5ad`中包含obs['cell_cycle_theta']
+
 ---
 # Cell cycle analysis with RNA velocity and deep-learning
 
