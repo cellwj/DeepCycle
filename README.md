@@ -1,5 +1,63 @@
+# 部署
 
+- ❌ Windows
+- ✅ Ubuntu
+```bash
+conda env create -f DeepCycle_env.yml
+conda activate DeepCycle
+```
 
+# 复现 ✅
+
+1. download data form (https://doi.org/10.5281/zenodo.4719436) and put it in `./`
+2. run example code
+```bash
+python DeepCycle.py --input_adata velocity_anndata_mouse_embryonic_stem_cells_DeepCycle_ISMARA.h5ad --gene_list go_annotation/GO_cell_cycle_annotation_mouse.txt --base_gene Nusap1 --expression_threshold 0.5 --gpu --hotelling --output_adata adata_mESC_DeepCycle.h5ad
+python estimate_cell_cycle_transitions.py --input_adata adata_mESC_DeepCycle.h5ad --gene_phase_dict ./theta_annotation/gene_phase_dict.json --output_npy_transitions ./theta_transitions.npy --output_svg_plot ./cell_cycle_phase_detection.svg
+```
+
+# 尝试
+
+尝试使用小鼠胰腺数据
+
+1. 安装scvelo（用于导入pancreas数据集并进行初步处理）
+  ```bash
+  conda activate DeepCycle
+  pip install scvelo==0.2.0
+  ```
+
+2. 导入scvelo中的自带数据集
+  
+  *（因网络问题，推荐从`https://github.com/theislab/scvelo_notebooks/raw/master/data/Pancreas/endocrinogenesis_day15.h5ad`自行下载然后放至`./data/Pancreas/`，或者使用魔法命令设置代理也可）*
+  ```python
+  import scvelo as scv
+  adata = scv.datasets.pancreas()
+  ```
+  *注意此数据集中已包含'spliced'和'unspliced'信息*
+  
+3. 使用`scvelo.pp.moments()`估算'Ms'和'Mu'
+  ```python
+     scv.pp.moments(adata)
+  ```
+
+4. 保存预处理后的数据
+  ```python
+  adata.write_h5ad('pancreas_pp.h5ad')
+  ```
+
+5. 计算DeepCycle
+  ```bash
+  python DeepCycle.py --input_adata "pancreas_pp.h5ad" --gene_list go_annotation/GO_cell_cycle_annotation_mouse.txt --base_gene Nusap1 --expression_threshold 0.5 --gpu --hotelling --output_adata pancreas_adata_mESC_DeepCycle.h5ad
+  ```
+  此时会报错`ValueError: 'Nusap1' is not in list`，故去`./DeepCycle/hotelling/filtered_genes.json`中选取一个基因作为新的初始基因（这里我选择json中的第一个基因`Actb`）。
+  
+6. 使用新的初始基因再次计算DeepCycle
+  ```bash
+  python DeepCycle.py --input_adata "pancreas_pp.h5ad" --gene_list go_annotation/GO_cell_cycle_annotation_mouse.txt --base_gene Actb --expression_threshold 0.5 --gpu --hotelling --output_adata pancreas_adata_mESC_DeepCycle.h5ad
+  ```
+
+此时输出文件`pancreas_adata_mESC_DeepCycle.h5ad`中包含obs['']
+---
 # Cell cycle analysis with RNA velocity and deep-learning
 
 The ability of a cell to replicate is at the core of many biological processes and single-cell RNA-seq allows the study of the mechanisms regulating the cell cycle without external perturbations. DeepCycle is a method that assign an angle (transcritional phase) to each cell in your dataset, that can be associated to the cell cycle stage with further analysis. The method is based on RNA velocity and an autoencoder, and has the ability to infer underlying circular structure in your data.
